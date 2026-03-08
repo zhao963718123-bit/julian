@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>工程英语手机练习版</title>
+<style>
+:root {
+  --bg:#f8fafc; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
+  --accent:#2563eb; --good:#16a34a; --warn:#ea580c; --soft:#eff6ff;
+}
+* { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin:0; font-family:Arial,"Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text);
+}
+.app {
+  max-width:560px; margin:0 auto; min-height:100vh; padding:12px 12px 96px;
+}
+.top {
+  position:sticky; top:0; z-index:10; background:rgba(248,250,252,.92); backdrop-filter: blur(10px);
+  padding:8px 0 10px;
+}
+.h1 { font-size:24px; font-weight:700; margin:4px 0; }
+.sub { color:var(--muted); font-size:13px; line-height:1.5; }
+.panel, .card, .mode-btn, .pill, .input, .bottom-bar {
+  background:var(--card); border:1px solid var(--line); border-radius:18px;
+}
+.panel { padding:12px; margin-top:10px; }
+.mode-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.mode-btn {
+  padding:10px 8px; text-align:center; font-size:13px; cursor:pointer; user-select:none;
+}
+.mode-btn.active { background:var(--soft); border-color:#bfdbfe; color:#1d4ed8; font-weight:700; }
+.row { display:flex; gap:8px; }
+.row > * { flex:1; }
+select, input[type="text"] {
+  width:100%; border:none; outline:none; background:transparent; font-size:15px; color:var(--text);
+}
+.input { padding:12px 14px; }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.stat { padding:10px; text-align:center; background:var(--card); border:1px solid var(--line); border-radius:16px; }
+.stat .n { font-size:20px; font-weight:700; margin-top:4px; }
+.card {
+  margin-top:12px; padding:16px; min-height:260px; display:flex; flex-direction:column; justify-content:space-between;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.label { font-size:12px; color:var(--muted); }
+.word { font-size:30px; font-weight:800; line-height:1.2; margin-top:8px; word-break:break-word; }
+.ipa { color:#1d4ed8; margin-top:10px; font-size:18px; word-break:break-word; }
+.meaning { font-size:24px; font-weight:700; margin-top:12px; line-height:1.35; }
+.category { margin-top:12px; color:var(--muted); font-size:13px; }
+.actions { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:14px; }
+.btn {
+  border:none; border-radius:16px; padding:13px 12px; font-size:16px; font-weight:700; cursor:pointer;
+}
+.btn.primary { background:var(--accent); color:#fff; }
+.btn.secondary { background:#fff; border:1px solid var(--line); color:var(--text); }
+.btn.good { background:var(--good); color:#fff; }
+.btn.warn { background:var(--warn); color:#fff; }
+.quiz-box { margin-top:12px; }
+.quiz-options { display:grid; grid-template-columns:1fr; gap:8px; margin-top:12px; }
+.quiz-option {
+  background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px; font-size:16px; text-align:left; cursor:pointer;
+}
+.quiz-option.correct { border-color:#86efac; background:#f0fdf4; }
+.quiz-option.wrong { border-color:#fdba74; background:#fff7ed; }
+.bottom-bar {
+  position:fixed; left:50%; transform:translateX(-50%); bottom:10px; width:min(536px, calc(100vw - 20px));
+  padding:10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; box-shadow:0 10px 30px rgba(15,23,42,.08);
+}
+.bottom-btn {
+  border:none; background:#fff; border-radius:14px; padding:12px 8px; font-size:15px; font-weight:700; cursor:pointer;
+}
+.bottom-btn.main { background:var(--accent); color:#fff; }
+.small { font-size:12px; color:var(--muted); }
+.hidden { display:none !important; }
+@media (max-width:380px) {
+  .word { font-size:26px; }
+  .meaning { font-size:22px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="h1">工程英语手机练习版</div>
+    <div class="sub">适合手机单手操作，支持抽背、听音、选择题和自测。</div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div class="input"><input id="searchInput" type="text" placeholder="搜索英文/中文" /></div>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <div class="input"><select id="categorySelect"><option value="">全部分类</option></select></div>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-btn active" data-mode="flash">翻卡模式</div>
+      <div class="mode-btn" data-mode="listen">听音模式</div>
+      <div class="mode-btn" data-mode="quiz">选择题</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="small">词条</div><div class="n" id="totalCount">0</div></div>
+      <div class="stat"><div class="small">当前</div><div class="n" id="currentIndex">0</div></div>
+      <div class="stat"><div class="small">掌握</div><div class="n" id="knownCount">0</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div>
+      <div class="label" id="modeLabel">翻卡模式</div>
+      <div class="word" id="wordText">Loading...</div>
+      <div class="ipa" id="ipaText"></div>
+      <div class="meaning hidden" id="meaningText"></div>
+      <div class="category" id="categoryText"></div>
+
+      <div class="quiz-box hidden" id="quizBox">
+        <div class="small">请选择正确中文意思</div>
+        <div class="quiz-options" id="quizOptions"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="actions" id="mainActions">
+        <button class="btn secondary" id="showBtn">显示答案</button>
+        <button class="btn primary" id="speakBtn">读音</button>
+      </div>
+      <div class="actions" id="markActions" style="margin-top:10px;">
+        <button class="btn warn" id="againBtn">再练</button>
+        <button class="btn good" id="knowBtn">已掌握</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="bottom-btn" id="prevBtn">上一个</button>
+  <button class="bottom-btn main" id="nextBtn">下一个</button>
+  <button class="bottom-btn" id="shuffleBtn">随机</button>
+</div>
+
+<script>
+const allWords = [{"en": "Aggregate", "zh": "骨料；集料", "ipa": "ˈæɡrɪɡət", "category": "土方工程"}, {"en": "Base course", "zh": "基层", "ipa": "beɪs kɔːs", "category": "土方工程"}, {"en": "Borrow area", "zh": "取土场", "ipa": "ˈbɒrəʊ ˈeəriə", "category": "土方工程"}, {"en": "Borrow material", "zh": "取土料", "ipa": "ˈbɒrəʊ məˈtɪriəl", "category": "土方工程"}, {"en": "Camber", "zh": "路拱", "ipa": "ˈkæmbə", "category": "土方工程"}, {"en": "Civil engineering", "zh": "土木工程", "ipa": "ˌsɪvl ˌendʒɪˈnɪərɪŋ", "category": "土方工程"}, {"en": "Clearing and grubbing", "zh": "清表清障", "ipa": "ˈklɪərɪŋ ənd ˈɡrʌbɪŋ", "category": "土方工程"}, {"en": "Commencement", "zh": "开工；启动", "ipa": "kəˈmensmənt", "category": "土方工程"}, {"en": "Compacting", "zh": "压实（动名词）", "ipa": "kəmˈpæktɪŋ", "category": "土方工程"}, {"en": "Construction works", "zh": "施工工程（复数）", "ipa": "kənˈstrʌkʃn wɜːks", "category": "土方工程"}, {"en": "Crawling Excavators", "zh": "履带式挖掘机（复数）", "ipa": "ˈkrɔːlɪŋ ˈekskəveɪtəz", "category": "土方工程"}, {"en": "Cross-fall", "zh": "横坡", "ipa": "krɒs fɔːl", "category": "土方工程"}, {"en": "Cutting", "zh": "挖方", "ipa": "ˈkʌtɪŋ", "category": "土方工程"}, {"en": "Daily basis", "zh": "每日进度", "ipa": "ˈdeɪli ˈbeɪsɪs", "category": "土方工程"}, {"en": "Density test", "zh": "密实度试验", "ipa": "ˈdensəti test", "category": "土方工程"}, {"en": "Design levels", "zh": "设计标高（复数）", "ipa": "dɪˈzaɪn ˈlevlz", "category": "土方工程"}, {"en": "Drainage", "zh": "排水", "ipa": "ˈdreɪnɪdʒ", "category": "土方工程"}, {"en": "Dump truck", "zh": "自卸卡车", "ipa": "dʌmp trʌk", "category": "土方工程"}, {"en": "Dump trucks", "zh": "自卸卡车（复数）", "ipa": "dʌmp trʌks", "category": "土方工程"}, {"en": "Earthworks", "zh": "土方工程", "ipa": "ˈɜːθwɜːrks", "category": "土方工程"}, {"en": "Embankment", "zh": "路堤", "ipa": "ɪmˈbæŋkmənt", "category": "土方工程"}, {"en": "Engineer’s instruction", "zh": "工程师指令", "ipa": "ˌendʒɪˈnɪəz ɪnˈstrʌkʃn", "category": "土方工程"}, {"en": "Excavation", "zh": "开挖", "ipa": "ˌekskəˈveɪʃn", "category": "土方工程"}, {"en": "Filler materials", "zh": "填料（复数）", "ipa": "ˈfɪlə məˈtɪriəlz", "category": "土方工程"}, {"en": "Filling", "zh": "填筑", "ipa": "ˈfɪlɪŋ", "category": "土方工程"}, {"en": "G30 material", "zh": "G30级配材料", "ipa": "dʒiː ˈθɜːti məˈtɪriəl", "category": "土方工程"}, {"en": "Graders", "zh": "平地机（复数）", "ipa": "ˈɡreɪdəz", "category": "土方工程"}, {"en": "Gradient check", "zh": "坡度检测", "ipa": "ˈɡreɪdiənt tʃek", "category": "土方工程"}, {"en": "Grading", "zh": "找平；级配", "ipa": "ˈɡreɪdɪŋ", "category": "土方工程"}, {"en": "Grubbing", "zh": "清障；除根", "ipa": "ˈɡrʌbɪŋ", "category": "土方工程"}, {"en": "Heavy equipment", "zh": "重型设备", "ipa": "ˈhevɪ ɪˈkwɪpmənt", "category": "土方工程"}, {"en": "Heavy machines", "zh": "重型机械（复数）", "ipa": "ˈhevɪ məˈʃiːnz", "category": "土方工程"}, {"en": "Inspection", "zh": "检查；验收", "ipa": "ɪnˈspekʃn", "category": "土方工程"}, {"en": "Laboratory tests", "zh": "实验室试验（复数）", "ipa": "ləˈbɒrətri tests", "category": "土方工程"}, {"en": "Level check", "zh": "标高检测", "ipa": "ˈlevəl tʃek", "category": "土方工程"}, {"en": "Leveling", "zh": "找平", "ipa": "ˈlevəlɪŋ", "category": "土方工程"}, {"en": "Loader", "zh": "装载机", "ipa": "ˈləʊdə", "category": "土方工程"}, {"en": "Longevity", "zh": "耐久性；使用寿命", "ipa": "lɒnˈdʒevəti", "category": "土方工程"}, {"en": "Longitudinal compaction", "zh": "纵向压实", "ipa": "ˌlɒŋɡɪˈtjuːdɪnl kəmˈpækʃn", "category": "土方工程"}, {"en": "Maximum dry density", "zh": "最大干密度", "ipa": "ˈmæksɪməm draɪ ˈdensəti", "category": "土方工程"}, {"en": "Mix design", "zh": "配合比设计", "ipa": "mɪks dɪˈzaɪn", "category": "土方工程"}, {"en": "Moisture", "zh": "水分", "ipa": "ˈmɔɪstʃə", "category": "土方工程"}, {"en": "Moisture conditioning", "zh": "含水率调整", "ipa": "ˈmɔɪstʃə kənˈdɪʃənɪŋ", "category": "土方工程"}, {"en": "Motor grader", "zh": "平地机", "ipa": "ˈməʊtə ˈɡreɪdə", "category": "土方工程"}, {"en": "Multiple passes", "zh": "多次碾压（复数）", "ipa": "ˈmʌltɪpl ˈpæsɪz", "category": "土方工程"}, {"en": "Optimum moisture content", "zh": "最佳含水率", "ipa": "ˈɒptɪməm ˈmɔɪstʃə ˈkɒntent", "category": "土方工程"}, {"en": "Pavement layers", "zh": "路面结构层（复数）", "ipa": "ˈpeɪvmənt ˈleɪəz", "category": "土方工程"}, {"en": "Paver Machine", "zh": "摊铺机", "ipa": "ˈpeɪvə məˈʃiːn", "category": "土方工程"}, {"en": "Placement", "zh": "铺设；放置", "ipa": "ˈpleɪsmənt", "category": "土方工程"}, {"en": "Project site", "zh": "施工现场", "ipa": "ˈprɒdʒekt saɪt", "category": "土方工程"}, {"en": "Quality control", "zh": "质量控制", "ipa": "ˈkwɒləti kənˈtrəʊl", "category": "土方工程"}, {"en": "Replacement", "zh": "换填", "ipa": "rɪˈpleɪsmənt", "category": "土方工程"}, {"en": "Road alignment", "zh": "道路线形", "ipa": "rəʊd əˈlaɪnmənt", "category": "土方工程"}, {"en": "Road construction", "zh": "道路施工", "ipa": "rəʊd kənˈstrʌkʃn", "category": "土方工程"}, {"en": "Road corridor", "zh": "道路廊道", "ipa": "rəʊd ˈkɒrɪdɔː", "category": "土方工程"}, {"en": "Road extents", "zh": "道路范围（复数）", "ipa": "rəʊd ɪkˈstents", "category": "土方工程"}, {"en": "Rock", "zh": "岩石", "ipa": "rɒk", "category": "土方工程"}, {"en": "Rollers", "zh": "压路机（复数）", "ipa": "ˈrəʊləz", "category": "土方工程"}, {"en": "Shaping", "zh": "整形", "ipa": "ˈʃeɪpɪŋ", "category": "土方工程"}, {"en": "Soft spots", "zh": "软土区（复数）", "ipa": "sɒft spɒts", "category": "土方工程"}, {"en": "Soil", "zh": "土壤", "ipa": "sɔɪl", "category": "土方工程"}, {"en": "Spreading", "zh": "摊铺；撒布", "ipa": "ˈspredɪŋ", "category": "土方工程"}, {"en": "Stability", "zh": "稳定性", "ipa": "stəˈbɪləti", "category": "土方工程"}, {"en": "Stabilized material", "zh": "稳定材料", "ipa": "ˈsteɪbəlaɪzd məˈtɪriəl", "category": "土方工程"}, {"en": "Sub-base", "zh": "底基层", "ipa": "ˈsʌbbeɪs", "category": "土方工程"}, {"en": "Sub-base material", "zh": "底基层材料", "ipa": "ˈsʌbbeɪs məˈtɪriəl", "category": "土方工程"}, {"en": "Subgrade", "zh": "路基", "ipa": "ˈsʌbɡreɪd", "category": "土方工程"}, {"en": "Successive layers", "zh": "连续层（复数）", "ipa": "səkˈsesɪv ˈleɪəz", "category": "土方工程"}, {"en": "Surveying equipment", "zh": "测量设备", "ipa": "səˈveɪɪŋ ɪˈkwɪpmənt", "category": "土方工程"}, {"en": "Surveyors", "zh": "测量员（复数）", "ipa": "səˈveɪəz", "category": "土方工程"}, {"en": "Tandem roller", "zh": "双钢轮压路机", "ipa": "ˈtændəm ˈrəʊlə", "category": "土方工程"}, {"en": "Traffic loads", "zh": "交通荷载（复数）", "ipa": "ˈtræfɪk ləʊdz", "category": "土方工程"}, {"en": "Transport", "zh": "运输", "ipa": "trænsˈpɔːt", "category": "土方工程"}, {"en": "Undulations", "zh": "起伏；波浪形（复数）", "ipa": "ˌʌndjuˈleɪʃnz", "category": "土方工程"}, {"en": "Vibratory roller", "zh": "振动压路机", "ipa": "vaɪˈbreɪtəri ˈrəʊlə", "category": "土方工程"}, {"en": "Water", "zh": "水", "ipa": "ˈwɔːtə", "category": "土方工程"}, {"en": "Weather changes", "zh": "天气变化（复数）", "ipa": "ˈweðə ˈtʃeɪndʒɪz", "category": "土方工程"}, {"en": "Wheel loaders", "zh": "轮式装载机（复数）", "ipa": "wiːl ˈləʊdəz", "category": "土方工程"}, {"en": "Work safety", "zh": "施工安全", "ipa": "wɜːk ˈseɪfti", "category": "土方工程"}, {"en": "Work section", "zh": "施工段", "ipa": "wɜːk ˈsekʃn", "category": "土方工程"}, {"en": "A4 paper", "zh": "A4 纸", "ipa": "ˌeɪ ˈfɔː(r) ˈpeɪpə(r)", "category": "场地与后勤"}, {"en": "Campsite", "zh": "营地", "ipa": "ˈkæmpsaɪt", "category": "场地与后勤"}, {"en": "Computer", "zh": "电脑", "ipa": "kəmˈpjuːtə(r)", "category": "场地与后勤"}, {"en": "Design", "zh": "设计", "ipa": "dɪˈzaɪn", "category": "场地与后勤"}, {"en": "Drawing", "zh": "图纸", "ipa": "ˈdrɔːɪŋ", "category": "场地与后勤"}, {"en": "Issues", "zh": "事宜", "ipa": "ˈɪʃuːz", "category": "场地与后勤"}, {"en": "Land", "zh": "土地", "ipa": "lænd", "category": "场地与后勤"}, {"en": "Meeting room", "zh": "会议室", "ipa": "ˈmiːtɪŋ ruːm", "category": "场地与后勤"}, {"en": "Network cable", "zh": "网线", "ipa": "ˈnetwɜːk ˈkeɪbl", "category": "场地与后勤"}, {"en": "Office", "zh": "办公室", "ipa": "ˈɒfɪs", "category": "场地与后勤"}, {"en": "Overtime", "zh": "加班", "ipa": "ˈəʊvətaɪm", "category": "场地与后勤"}, {"en": "Power relocation", "zh": "电线拆迁", "ipa": "ˈpaʊə(r) ˌriːləʊˈkeɪʃn", "category": "场地与后勤"}, {"en": "Print", "zh": "打印", "ipa": "prɪnt", "category": "场地与后勤"}, {"en": "Site", "zh": "场地", "ipa": "saɪt", "category": "场地与后勤"}, {"en": "Water pipe relocation", "zh": "水管搬迁", "ipa": "ˈwɔːtə(r) paɪp ˌriːləʊˈkeɪʃn", "category": "场地与后勤"}, {"en": "Browse water", "zh": "洒水", "ipa": "braʊz ˈwɔːtə(r)", "category": "安全与环境"}, {"en": "Compaction", "zh": "压实", "ipa": "kəmˈpækʃən", "category": "安全与环境"}, {"en": "Density", "zh": "压实度", "ipa": "ˈdensəti", "category": "安全与环境"}, {"en": "Distance", "zh": "距离", "ipa": "ˈdɪstəns", "category": "安全与环境"}, {"en": "Dry", "zh": "干燥", "ipa": "draɪ", "category": "安全与环境"}, {"en": "Dry season", "zh": "旱季", "ipa": "draɪ ˈsiːzn", "category": "安全与环境"}, {"en": "Environment", "zh": "环境", "ipa": "ɪnˈvaɪrənmənt", "category": "安全与环境"}, {"en": "Gloves", "zh": "手套", "ipa": "ɡlʌvz", "category": "安全与环境"}, {"en": "Health", "zh": "健康", "ipa": "helθ", "category": "安全与环境"}, {"en": "Heavy rain", "zh": "大雨", "ipa": "ˈhevɪ reɪn", "category": "安全与环境"}, {"en": "House", "zh": "房屋", "ipa": "haʊs", "category": "安全与环境"}, {"en": "Mask", "zh": "口罩", "ipa": "mɑːsk", "category": "安全与环境"}, {"en": "Moisture content", "zh": "含水率", "ipa": "ˈmɔɪstʃə(r) kənˈtent", "category": "安全与环境"}, {"en": "Rain season", "zh": "雨季", "ipa": "reɪn ˈsiːzn", "category": "安全与环境"}, {"en": "Reduce dust", "zh": "降尘", "ipa": "rɪˈdjuːs dʌst", "category": "安全与环境"}, {"en": "Reflector", "zh": "反光背心", "ipa": "rɪˈflektə(r)", "category": "安全与环境"}, {"en": "Road close", "zh": "封路", "ipa": "rəʊd kləʊz", "category": "安全与环境"}, {"en": "Safety", "zh": "安全", "ipa": "ˈseɪfti", "category": "安全与环境"}, {"en": "Safety helmet", "zh": "安全帽", "ipa": "ˈseɪfti ˈhelmɪt", "category": "安全与环境"}, {"en": "Slump", "zh": "塌落度", "ipa": "slʌmp", "category": "安全与环境"}, {"en": "Speed reduce", "zh": "减速", "ipa": "spiːd rɪˈdjuːs", "category": "安全与环境"}, {"en": "Times", "zh": "次数", "ipa": "taɪmz", "category": "安全与环境"}, {"en": "Tool box meeting", "zh": "早班会", "ipa": "tuːl bɒks ˈmiːtɪŋ", "category": "安全与环境"}, {"en": "Traffic barrier", "zh": "水马", "ipa": "ˈtræfɪk ˈbæriə(r)", "category": "安全与环境"}, {"en": "Unreasonable", "zh": "不合理", "ipa": "ʌnˈriːznəbl", "category": "安全与环境"}, {"en": "Warning tape", "zh": "警戒带", "ipa": "ˈwɔːnɪŋ teɪp", "category": "安全与环境"}, {"en": "Water storm", "zh": "洪水", "ipa": "ˈwɔːtə(r) stɔːm", "category": "安全与环境"}, {"en": "Adherence", "zh": "遵守", "ipa": "ədˈhɪərəns", "category": "技术与试验"}, {"en": "Alignment", "zh": "线型，对齐", "ipa": "əˈlaɪnmənt", "category": "技术与试验"}, {"en": "Asphalt concrete temperature", "zh": "沥青混凝土温度", "ipa": "ˈæsfɔːlt ˈkɒŋkriːt ˈtemprətʃə", "category": "技术与试验"}, {"en": "Asphalt paving", "zh": "沥青摊铺", "ipa": "ˈæsfɔːlt ˈpeɪvɪŋ", "category": "技术与试验"}, {"en": "Bitumen emulsion", "zh": "乳化沥青", "ipa": "ˈbɪtʃʊmɪn ɪˈmʌlʃən", "category": "技术与试验"}, {"en": "Check", "zh": "检查", "ipa": "tʃek", "category": "技术与试验"}, {"en": "Collect", "zh": "收集", "ipa": "kəˈlekt", "category": "技术与试验"}, {"en": "Compile test reports", "zh": "整理测试报告", "ipa": "kəmˈpaɪl test rɪˈpɔːts", "category": "技术与试验"}, {"en": "Compliance", "zh": "符合，遵守", "ipa": "kəmˈplaɪəns", "category": "技术与试验"}, {"en": "Concrete batch", "zh": "混凝土批次", "ipa": "ˈkɒŋkriːt bætʃ", "category": "技术与试验"}, {"en": "Concrete mix design", "zh": "混凝土配合比设计", "ipa": "ˈkɒŋkriːt mɪks dɪˈzaɪn", "category": "技术与试验"}, {"en": "Concrete placement", "zh": "混凝土浇筑", "ipa": "ˈkɒŋkriːt ˈpleɪsmənt", "category": "技术与试验"}, {"en": "Conduct", "zh": "进行，开展", "ipa": "kənˈdʌkt", "category": "技术与试验"}, {"en": "Consistency", "zh": "稠度", "ipa": "kənˈsɪstənsi", "category": "技术与试验"}, {"en": "Construction site", "zh": "建筑工地", "ipa": "kənˈstrʌkʃən saɪt", "category": "技术与试验"}, {"en": "Crew", "zh": "施工人员", "ipa": "kruː", "category": "技术与试验"}, {"en": "Daily achievements", "zh": "每日成就", "ipa": "ˈdeɪli əˈtʃiːvmənts", "category": "技术与试验"}, {"en": "Database", "zh": "数据库", "ipa": "ˈdeɪtəbeɪs", "category": "技术与试验"}, {"en": "Density", "zh": "密度", "ipa": "ˈdensəti", "category": "技术与试验"}, {"en": "Document", "zh": "记录", "ipa": "ˈdɒkjument", "category": "技术与试验"}, {"en": "Drainage supervision", "zh": "排水监督", "ipa": "ˈdreɪnɪdʒ ˌsuːpəˈvɪʒən", "category": "技术与试验"}, {"en": "Ensure", "zh": "确保", "ipa": "ɪnˈʃɔː", "category": "技术与试验"}, {"en": "Equipment", "zh": "设备", "ipa": "ɪˈkwɪpmənt", "category": "技术与试验"}, {"en": "Field density testing", "zh": "现场密度测试", "ipa": "fiːld ˈdensəti ˈtestɪŋ", "category": "技术与试验"}, {"en": "Flow capacity", "zh": "过流能力", "ipa": "fləʊ kəˈpæsəti", "category": "技术与试验"}, {"en": "Gauge", "zh": "仪，表", "ipa": "ɡeɪdʒ", "category": "技术与试验"}, {"en": "Geological conditions", "zh": "地质条件", "ipa": "ˌdʒiːəˈlɒdʒɪkəl kənˈdɪʃənz", "category": "技术与试验"}, {"en": "Hardness", "zh": "硬度", "ipa": "ˈhɑːdnəs", "category": "技术与试验"}, {"en": "HSE", "zh": "健康、安全、环境", "ipa": "eɪtʃ es ˈiː", "category": "技术与试验"}, {"en": "Inspect", "zh": "检查，检验", "ipa": "ɪnˈspekt", "category": "技术与试验"}, {"en": "Investigate", "zh": "调查", "ipa": "ɪnˈvestɪɡeɪt", "category": "技术与试验"}, {"en": "Key tasks", "zh": "关键任务", "ipa": "kiː tɑːsks", "category": "技术与试验"}, {"en": "Laboratory", "zh": "实验室", "ipa": "ləˈbɒrətri", "category": "技术与试验"}, {"en": "Laboratory Technician", "zh": "实验室技术员", "ipa": "ləˈbɒrətri tekˈnɪʃən", "category": "技术与试验"}, {"en": "Log", "zh": "记录", "ipa": "lɒɡ", "category": "技术与试验"}, {"en": "Low compressive strength", "zh": "抗压强度低", "ipa": "ləʊ kəmˈpresɪv streŋθ", "category": "技术与试验"}, {"en": "Measurements", "zh": "测量数据", "ipa": "ˈmeʒəmənts", "category": "技术与试验"}, {"en": "Moisture content", "zh": "含水量", "ipa": "ˈmɔɪstʃə ˈkɒntent", "category": "技术与试验"}, {"en": "Monitor", "zh": "监控，监测", "ipa": "ˈmɒnɪtə", "category": "技术与试验"}, {"en": "Next batch", "zh": "下一批次", "ipa": "nekst bætʃ", "category": "技术与试验"}, {"en": "Next-day tasks", "zh": "第二天的任务", "ipa": "nekst deɪ tɑːsks", "category": "技术与试验"}, {"en": "Note", "zh": "记录", "ipa": "nəʊt", "category": "技术与试验"}, {"en": "Nuclear density gauge", "zh": "核子密度仪", "ipa": "ˈnjuːkliə ˈdensəti ɡeɪdʒ", "category": "技术与试验"}, {"en": "Oversee", "zh": "监督，看管", "ipa": "ˌəʊvəˈsiː", "category": "技术与试验"}, {"en": "Pass", "zh": "合格", "ipa": "pɑːs", "category": "技术与试验"}, {"en": "Paving", "zh": "摊铺", "ipa": "ˈpeɪvɪŋ", "category": "技术与试验"}, {"en": "Perform", "zh": "进行，执行", "ipa": "pəˈfɔːm", "category": "技术与试验"}, {"en": "Permanent works", "zh": "永久性工程", "ipa": "ˈpɜːmənənt wɜːks", "category": "技术与试验"}, {"en": "PPE", "zh": "个人防护装备", "ipa": "piː piː ˈiː", "category": "技术与试验"}, {"en": "Prepare", "zh": "准备", "ipa": "prɪˈpeə", "category": "技术与试验"}, {"en": "Professional responsibilities", "zh": "专业职责", "ipa": "prəˈfeʃənəl rɪˌspɒnsəˈbɪlətiz", "category": "技术与试验"}, {"en": "Project manager", "zh": "项目经理", "ipa": "ˈprɒdʒekt ˈmænɪdʒə", "category": "技术与试验"}, {"en": "Project specifications", "zh": "项目规格要求", "ipa": "ˈprɒdʒekt ˌspesɪfɪˈkeɪʃənz", "category": "技术与试验"}, {"en": "Protocol", "zh": "规程", "ipa": "ˈprəʊtəkɒl", "category": "技术与试验"}, {"en": "QC", "zh": "质量控制", "ipa": "kjuː ˈsiː", "category": "技术与试验"}, {"en": "Quarry", "zh": "采石场", "ipa": "ˈkwɒri", "category": "技术与试验"}, {"en": "Quarry site investigation", "zh": "采石场现场调查", "ipa": "ˈkwɒri saɪt ɪnˌvestɪˈɡeɪʃən", "category": "技术与试验"}, {"en": "Recommend", "zh": "推荐", "ipa": "ˌrekəˈmend", "category": "技术与试验"}, {"en": "Reflect on", "zh": "回顾，思考", "ipa": "rɪˈflekt ɒn", "category": "技术与试验"}, {"en": "Reinforce", "zh": "重申，加强", "ipa": "ˌriːɪnˈfɔːs", "category": "技术与试验"}, {"en": "Requirement", "zh": "要求", "ipa": "rɪˈkwaɪəmənt", "category": "技术与试验"}, {"en": "Review", "zh": "回顾，查看", "ipa": "rɪˈvjuː", "category": "技术与试验"}, {"en": "Rolling", "zh": "碾压", "ipa": "ˈrəʊlɪŋ", "category": "技术与试验"}, {"en": "Root cause", "zh": "根本原因", "ipa": "ruːt kɔːz", "category": "技术与试验"}, {"en": "Routine", "zh": "流程，常规", "ipa": "ruːˈtiːn", "category": "技术与试验"}, {"en": "Sample", "zh": "样本", "ipa": "ˈsɑːmpəl", "category": "技术与试验"}, {"en": "Segregation", "zh": "离析", "ipa": "ˌseɡrɪˈɡeɪʃən", "category": "技术与试验"}, {"en": "Shape", "zh": "形状", "ipa": "ʃeɪp", "category": "技术与试验"}, {"en": "Site engineer", "zh": "现场工程师", "ipa": "saɪt ˌendʒɪˈnɪə", "category": "技术与试验"}, {"en": "Slump test", "zh": "坍落度测试", "ipa": "slʌmp test", "category": "技术与试验"}, {"en": "Soil layer", "zh": "土层", "ipa": "sɔɪl ˈleɪə", "category": "技术与试验"}, {"en": "Solution", "zh": "解决方案", "ipa": "səˈluːʃən", "category": "技术与试验"}, {"en": "Spray rate", "zh": "喷洒率", "ipa": "spreɪ reɪt", "category": "技术与试验"}, {"en": "Standard", "zh": "标准", "ipa": "ˈstændəd", "category": "技术与试验"}, {"en": "Strength", "zh": "强度", "ipa": "streŋθ", "category": "技术与试验"}, {"en": "Summary", "zh": "摘要", "ipa": "ˈsʌməri", "category": "技术与试验"}, {"en": "Supervise", "zh": "监督，指导", "ipa": "ˈsuːpəvaɪz", "category": "技术与试验"}, {"en": "Test", "zh": "测试", "ipa": "test", "category": "技术与试验"}, {"en": "Testing equipment checklist", "zh": "测试设备清单", "ipa": "ˈtestɪŋ ɪˈkwɪpmənt ˈtʃeklɪst", "category": "技术与试验"}, {"en": "Unrecorded", "zh": "未记录的", "ipa": "ˌʌnrɪˈkɔːdɪd", "category": "技术与试验"}, {"en": "Update", "zh": "更新", "ipa": "ʌpˈdeɪt", "category": "技术与试验"}, {"en": "Verify", "zh": "核实", "ipa": "ˈverɪfaɪ", "category": "技术与试验"}, {"en": "Verify compliance", "zh": "核实合规性", "ipa": "ˈverɪfaɪ kəmˈplaɪəns", "category": "技术与试验"}, {"en": "Water absorption", "zh": "吸水率", "ipa": "ˈwɔːtər əbˈsɔːpʃən", "category": "技术与试验"}, {"en": "Carpenter", "zh": "木工", "ipa": "ˈkɑːpəntə(r)", "category": "施工人员"}, {"en": "Casual labour", "zh": "普工", "ipa": "ˈkæʒuəl ˈleɪbə(r)", "category": "施工人员"}, {"en": "Driver", "zh": "司机", "ipa": "ˈdraɪvə(r)", "category": "施工人员"}, {"en": "Electrician", "zh": "电工", "ipa": "ɪˌlekˈtrɪʃn", "category": "施工人员"}, {"en": "Engineer", "zh": "工程师", "ipa": "ˌendʒɪˈnɪə(r)", "category": "施工人员"}, {"en": "Environmental officer", "zh": "环境官", "ipa": "ɪnˌvaɪrənˈmentl ˈɒfɪsə(r)", "category": "施工人员"}, {"en": "Landlord", "zh": "地主", "ipa": "ˈlændlɔːd", "category": "施工人员"}, {"en": "Mechanic", "zh": "修理工", "ipa": "məˈkænɪk", "category": "施工人员"}, {"en": "Operator", "zh": "操作手", "ipa": "ˈɒpəreɪtə(r)", "category": "施工人员"}, {"en": "People in village", "zh": "村民", "ipa": "ˈpiːpl ɪn ˈvɪlɪdʒ", "category": "施工人员"}, {"en": "Plumber", "zh": "水管工", "ipa": "ˈplʌmə(r)", "category": "施工人员"}, {"en": "Safety manager", "zh": "安全经理", "ipa": "ˈseɪfti ˈmænɪdʒə(r)", "category": "施工人员"}, {"en": "Safety officer", "zh": "安全员", "ipa": "ˈseɪfti ˈɒfɪsə(r)", "category": "施工人员"}, {"en": "Steel fixer", "zh": "钢筋工", "ipa": "stiːl ˈfɪksə(r)", "category": "施工人员"}, {"en": "Supervisor", "zh": "高级雇员", "ipa": "ˈsuːpəvaɪzə(r)", "category": "施工人员"}, {"en": "Surveyor", "zh": "测量员", "ipa": "səˈveɪə(r)", "category": "施工人员"}, {"en": "Angle line", "zh": "方钢", "ipa": "ˈæŋɡl laɪn", "category": "施工材料与工具"}, {"en": "Asphalt", "zh": "沥青", "ipa": "ˈæsfɔːlt", "category": "施工材料与工具"}, {"en": "Backfill", "zh": "回填", "ipa": "ˈbækfɪl", "category": "施工材料与工具"}, {"en": "Basement", "zh": "底板", "ipa": "ˈbeɪsmənt", "category": "施工材料与工具"}, {"en": "Bedding", "zh": "垫层", "ipa": "ˈbedɪŋ", "category": "施工材料与工具"}, {"en": "Black soil", "zh": "黑土", "ipa": "blæk sɔɪl", "category": "施工材料与工具"}, {"en": "Borrow pit", "zh": "借土场", "ipa": "ˈbɒrəʊ pɪt", "category": "施工材料与工具"}, {"en": "Box culvert", "zh": "箱涵", "ipa": "bɒks ˈkʌlvət", "category": "施工材料与工具"}, {"en": "Brush", "zh": "刷子", "ipa": "brʌʃ", "category": "施工材料与工具"}, {"en": "Cement", "zh": "水泥", "ipa": "sɪˈment", "category": "施工材料与工具"}, {"en": "Chalk", "zh": "石笔", "ipa": "tʃɔːk", "category": "施工材料与工具"}, {"en": "Concrete", "zh": "混凝土", "ipa": "ˈkɒŋkriːt; kənˈkriːt", "category": "施工材料与工具"}, {"en": "Concrete nail", "zh": "混凝土钉子", "ipa": "ˈkɒŋkriːt neɪl", "category": "施工材料与工具"}, {"en": "Cover", "zh": "盖板", "ipa": "ˈkʌvə(r)", "category": "施工材料与工具"}, {"en": "Cross pipe culverts", "zh": "横向管涵", "ipa": "krɒs paɪp ˈkʌlvəts", "category": "施工材料与工具"}, {"en": "Crushed stone", "zh": "机轧碎石", "ipa": "krʌʃt stəʊn", "category": "施工材料与工具"}, {"en": "Cutting blade", "zh": "切割片", "ipa": "ˈkʌtɪŋ bleɪd", "category": "施工材料与工具"}, {"en": "Diesel", "zh": "柴油", "ipa": "ˈdiːzl", "category": "施工材料与工具"}, {"en": "Drain", "zh": "水沟", "ipa": "dreɪn", "category": "施工材料与工具"}, {"en": "Dumping site", "zh": "弃土场", "ipa": "ˈdʌmpɪŋ saɪt", "category": "施工材料与工具"}, {"en": "Dumping soil", "zh": "弃土", "ipa": "ˈdʌmpɪŋ sɔɪl", "category": "施工材料与工具"}, {"en": "Dust", "zh": "尘土", "ipa": "dʌst", "category": "施工材料与工具"}, {"en": "Engineering wire", "zh": "工程线", "ipa": "ˌendʒɪˈnɪərɪŋ ˈwaɪə(r)", "category": "施工材料与工具"}, {"en": "Gravel", "zh": "石子", "ipa": "ˈɡrævl", "category": "施工材料与工具"}, {"en": "Hammer", "zh": "锤子", "ipa": "ˈhæmə(r)", "category": "施工材料与工具"}, {"en": "Island", "zh": "环岛", "ipa": "ˈaɪlənd", "category": "施工材料与工具"}, {"en": "Kerb stone", "zh": "路缘石", "ipa": "kɜːb stəʊn", "category": "施工材料与工具"}, {"en": "Longitudinal pipe culvert", "zh": "纵向管涵", "ipa": "ˌlɒŋɡɪˈtjuːdɪnl paɪp ˈkʌlvət", "category": "施工材料与工具"}, {"en": "Loss", "zh": "损耗", "ipa": "lɒs", "category": "施工材料与工具"}, {"en": "Manhole", "zh": "人井", "ipa": "ˈmænhəʊl", "category": "施工材料与工具"}, {"en": "Material", "zh": "材料", "ipa": "məˈtɪəriəl", "category": "施工材料与工具"}, {"en": "Mileage", "zh": "里程", "ipa": "ˈmaɪlɪdʒ", "category": "施工材料与工具"}, {"en": "Nail", "zh": "钉子", "ipa": "neɪl", "category": "施工材料与工具"}, {"en": "Paint", "zh": "油漆", "ipa": "peɪnt", "category": "施工材料与工具"}, {"en": "Pavement", "zh": "路面", "ipa": "ˈpeɪvmənt", "category": "施工材料与工具"}, {"en": "Paver", "zh": "道砖", "ipa": "ˈpeɪvə(r)", "category": "施工材料与工具"}, {"en": "Pickaxe", "zh": "洋镐", "ipa": "ˈpɪkæks", "category": "施工材料与工具"}, {"en": "Pipe culvert", "zh": "管涵", "ipa": "paɪp ˈkʌlvət", "category": "施工材料与工具"}, {"en": "Plate number", "zh": "车牌号", "ipa": "pleɪt ˈnʌmbə(r)", "category": "施工材料与工具"}, {"en": "Retaining wall", "zh": "挡土墙", "ipa": "rɪˈteɪnɪŋ wɔːl", "category": "施工材料与工具"}, {"en": "Road base", "zh": "基层", "ipa": "rəʊd beɪs", "category": "施工材料与工具"}, {"en": "Road marking", "zh": "划线", "ipa": "rəʊd ˈmɑːkɪŋ", "category": "施工材料与工具"}, {"en": "Road surface", "zh": "面层", "ipa": "rəʊd ˈsɜːfɪs", "category": "施工材料与工具"}, {"en": "Roadbed", "zh": "路床", "ipa": "ˈrəʊdbed", "category": "施工材料与工具"}, {"en": "Rockfill", "zh": "抛石", "ipa": "ˈrɒkfɪl", "category": "施工材料与工具"}, {"en": "Sand", "zh": "沙子", "ipa": "sænd", "category": "施工材料与工具"}, {"en": "Saw", "zh": "锯", "ipa": "sɔː", "category": "施工材料与工具"}, {"en": "Service duct", "zh": "服务管线", "ipa": "ˈsɜːvɪs dʌkt", "category": "施工材料与工具"}, {"en": "Shallow drain", "zh": "浅沟", "ipa": "ˈʃæləʊ dreɪn", "category": "施工材料与工具"}, {"en": "Sidewalk", "zh": "人行道", "ipa": "ˈsaɪdwɔːk", "category": "施工材料与工具"}, {"en": "Signage", "zh": "标识标牌", "ipa": "ˈsaɪnɪdʒ", "category": "施工材料与工具"}, {"en": "Soft soil", "zh": "软土", "ipa": "sɒft sɔɪl", "category": "施工材料与工具"}, {"en": "Spade", "zh": "铁锹", "ipa": "speɪd", "category": "施工材料与工具"}, {"en": "Steel", "zh": "钢筋", "ipa": "stiːl", "category": "施工材料与工具"}, {"en": "Steel mesh", "zh": "钢筋网片", "ipa": "stiːl meʃ", "category": "施工材料与工具"}, {"en": "Stock pile", "zh": "储料场", "ipa": "stɒk paɪl", "category": "施工材料与工具"}, {"en": "Stone dust", "zh": "石粉", "ipa": "stəʊn dʌst", "category": "施工材料与工具"}, {"en": "Stone pitching", "zh": "浆砌边沟", "ipa": "stəʊn ˈpɪtʃɪŋ", "category": "施工材料与工具"}, {"en": "Street light", "zh": "路灯", "ipa": "striːt laɪt", "category": "施工材料与工具"}, {"en": "Subbase", "zh": "底基层", "ipa": "ˈsʌbbeɪs", "category": "施工材料与工具"}, {"en": "Swamp", "zh": "沼泽地", "ipa": "swɒmp", "category": "施工材料与工具"}, {"en": "Tarpaulin", "zh": "雨布", "ipa": "tɑːˈpɔːlɪn", "category": "施工材料与工具"}, {"en": "Timber", "zh": "木方", "ipa": "ˈtɪmbə(r)", "category": "施工材料与工具"}, {"en": "Time sheet", "zh": "工表", "ipa": "taɪm ʃiːt", "category": "施工材料与工具"}, {"en": "Top slab", "zh": "顶板", "ipa": "tɒp slæb", "category": "施工材料与工具"}, {"en": "Topsoil", "zh": "表土", "ipa": "ˈtɒpsɔɪl", "category": "施工材料与工具"}, {"en": "Water point", "zh": "取水点", "ipa": "ˈwɔːtə(r) pɔɪnt", "category": "施工材料与工具"}, {"en": "Wing wall", "zh": "八字墙", "ipa": "wɪŋ wɔːl", "category": "施工材料与工具"}, {"en": "Bulldozer", "zh": "推土机", "ipa": "ˈbʊldəʊzə(r)", "category": "施工设备与机械"}, {"en": "Camera", "zh": "摄像头", "ipa": "ˈkæmrə", "category": "施工设备与机械"}, {"en": "Compressor", "zh": "空压机", "ipa": "kəmˈpresə(r)", "category": "施工设备与机械"}, {"en": "Concrete tank", "zh": "混凝土罐车", "ipa": "ˈkɒŋkriːt tæŋk", "category": "施工设备与机械"}, {"en": "Construction site", "zh": "工地", "ipa": "kənˈstrʌkʃn saɪt", "category": "施工设备与机械"}, {"en": "Container", "zh": "集装箱", "ipa": "kənˈteɪnə(r)", "category": "施工设备与机械"}, {"en": "Crane", "zh": "吊车", "ipa": "kreɪn", "category": "施工设备与机械"}, {"en": "Cutting machine", "zh": "切割机", "ipa": "ˈkʌtɪŋ məˈʃiːn", "category": "施工设备与机械"}, {"en": "Double drum roller", "zh": "双钢轮", "ipa": "ˈdʌbl drʌm ˈrəʊlə(r)", "category": "施工设备与机械"}, {"en": "Dumpy level", "zh": "水准仪", "ipa": "ˈdʌmpi ˈlevl", "category": "施工设备与机械"}, {"en": "Electric hammer", "zh": "电镐", "ipa": "ɪˈlektrɪk ˈhæmə(r)", "category": "施工设备与机械"}, {"en": "Excavator", "zh": "挖掘机", "ipa": "ˈekskəveɪtə(r)", "category": "施工设备与机械"}, {"en": "Fence", "zh": "围栏", "ipa": "fens", "category": "施工设备与机械"}, {"en": "Formwork", "zh": "模板", "ipa": "ˈfɔːmwɜːk", "category": "施工设备与机械"}, {"en": "Fuel tank", "zh": "油罐车", "ipa": "ˈfjuːəl tæŋk", "category": "施工设备与机械"}, {"en": "Generator", "zh": "发电机", "ipa": "ˈdʒenəreɪtə(r)", "category": "施工设备与机械"}, {"en": "Grader", "zh": "平地机", "ipa": "ˈɡreɪdə(r)", "category": "施工设备与机械"}, {"en": "High up", "zh": "随车吊", "ipa": "haɪ ʌp", "category": "施工设备与机械"}, {"en": "Humps", "zh": "减速带", "ipa": "hʌmps", "category": "施工设备与机械"}, {"en": "Jumper", "zh": "夯机", "ipa": "ˈdʒʌmpə(r)", "category": "施工设备与机械"}, {"en": "Machine", "zh": "仪器", "ipa": "məˈʃiːn", "category": "施工设备与机械"}, {"en": "Map", "zh": "地图", "ipa": "mæp", "category": "施工设备与机械"}, {"en": "Mixer", "zh": "搅拌机", "ipa": "ˈmɪksə(r)", "category": "施工设备与机械"}, {"en": "Mold", "zh": "模具", "ipa": "məʊld", "category": "施工设备与机械"}, {"en": "Motor", "zh": "电机", "ipa": "ˈməʊtə(r)", "category": "施工设备与机械"}, {"en": "Paver", "zh": "摊铺机", "ipa": "ˈpeɪvə(r)", "category": "施工设备与机械"}, {"en": "Pickup", "zh": "皮卡", "ipa": "ˈpɪkʌp", "category": "施工设备与机械"}, {"en": "Plywood", "zh": "竹胶板", "ipa": "ˈplaɪwʊd", "category": "施工设备与机械"}, {"en": "Printer", "zh": "打印机", "ipa": "ˈprɪntə(r)", "category": "施工设备与机械"}, {"en": "Pump tank", "zh": "泵车", "ipa": "pʌmp tæŋk", "category": "施工设备与机械"}, {"en": "Roller", "zh": "压路机", "ipa": "ˈrəʊlə(r)", "category": "施工设备与机械"}, {"en": "Spade level", "zh": "水平尺", "ipa": "speɪd ˈlevl", "category": "施工设备与机械"}, {"en": "Tie rod", "zh": "拉杆", "ipa": "taɪ rɒd", "category": "施工设备与机械"}, {"en": "Tire", "zh": "轮胎", "ipa": "ˈtaɪə(r)", "category": "施工设备与机械"}, {"en": "Truck", "zh": "卡车", "ipa": "trʌk", "category": "施工设备与机械"}, {"en": "Tyre roller", "zh": "胶轮", "ipa": "ˈtaɪə(r) ˈrəʊlə(r)", "category": "施工设备与机械"}, {"en": "Vehicle with mechanic problems", "zh": "车坏了", "ipa": "ˈviːəkl wɪð məˈkænɪk ˈprɒbləmz", "category": "施工设备与机械"}, {"en": "Vibrator", "zh": "振捣棒", "ipa": "vaɪˈbreɪtə(r)", "category": "施工设备与机械"}, {"en": "Water pump", "zh": "水泵", "ipa": "ˈwɔːtə(r) pʌmp", "category": "施工设备与机械"}, {"en": "Water tank", "zh": "水车", "ipa": "ˈwɔːtə(r) tæŋk", "category": "施工设备与机械"}, {"en": "abutment", "zh": "桥台", "ipa": "əˈbʌtmənt", "category": "桥梁工程"}, {"en": "anchor sealing", "zh": "封锚", "ipa": "ˈæŋkər ˈsiːlɪŋ", "category": "桥梁工程"}, {"en": "arch bridge", "zh": "拱形桥", "ipa": "ɑːrtʃ brɪdʒ", "category": "桥梁工程"}, {"en": "bearing", "zh": "支座", "ipa": "ˈbeərɪŋ", "category": "桥梁工程"}, {"en": "bored pile", "zh": "钻孔灌注桩", "ipa": "bɔːrd paɪl", "category": "桥梁工程"}, {"en": "bottom form", "zh": "底模", "ipa": "ˈbɒtəm fɔːrm", "category": "桥梁工程"}, {"en": "box girder", "zh": "箱梁", "ipa": "bɒks ˈɡɜːrdər", "category": "桥梁工程"}, {"en": "bridge", "zh": "桥梁", "ipa": "brɪdʒ", "category": "桥梁工程"}, {"en": "bridge deck pavement", "zh": "桥面铺装", "ipa": "brɪdʒ dek ˈpeɪvmənt", "category": "桥梁工程"}, {"en": "cable hoisting", "zh": "缆索吊装", "ipa": "ˈkeɪbl ˈhɔɪstɪŋ", "category": "桥梁工程"}, {"en": "cable-stayed bridge", "zh": "斜拉桥", "ipa": "ˈkeɪbəl steɪd brɪdʒ", "category": "桥梁工程"}, {"en": "cantilever casting", "zh": "挂篮悬浇", "ipa": "ˈkæntɪliːvər ˈkɑːstɪŋ", "category": "桥梁工程"}, {"en": "casting bed", "zh": "台座", "ipa": "ˈkɑːstɪŋ bed", "category": "桥梁工程"}, {"en": "continuous girder bridge", "zh": "连续梁桥", "ipa": "kənˈtɪnjuəs ˈɡɜːrdər brɪdʒ", "category": "桥梁工程"}, {"en": "core form", "zh": "芯模", "ipa": "kɔːr fɔːrm", "category": "桥梁工程"}, {"en": "cross beam", "zh": "横梁", "ipa": "krɔːs biːm", "category": "桥梁工程"}, {"en": "dynamic testing", "zh": "动测法", "ipa": "daɪˈnæmɪk ˈtɛstɪŋ", "category": "桥梁工程"}, {"en": "expansion joint", "zh": "伸缩缝", "ipa": "ɪkˈspænʃən dʒɔɪnt", "category": "桥梁工程"}, {"en": "girder bridge", "zh": "梁桥", "ipa": "ˈɡɜːrdər brɪdʒ", "category": "桥梁工程"}, {"en": "girder erection machine", "zh": "架桥机", "ipa": "ˈɡɝːdər ɪˈrɛkʃən məˈʃiːn", "category": "桥梁工程"}, {"en": "grouting", "zh": "压浆", "ipa": "ˈɡraʊtɪŋ", "category": "桥梁工程"}, {"en": "hole cleaning", "zh": "清孔", "ipa": "hoʊl ˈkliːnɪŋ", "category": "桥梁工程"}, {"en": "incremental launching", "zh": "顶推施工", "ipa": "ˈɪŋkrəˈmɛntl ˈlɔːntʃɪŋ", "category": "桥梁工程"}, {"en": "jacking method", "zh": "顶升法", "ipa": "ˈdʒækɪŋ ˈmeθəd", "category": "桥梁工程"}, {"en": "main girder", "zh": "主梁", "ipa": "meɪn ˈɡɜːrdər", "category": "桥梁工程"}, {"en": "movable scaffolding system (MSS)", "zh": "移动模架", "ipa": "ˈmuːvəbl ˈskæfəldɪŋ ˈsɪstəm", "category": "桥梁工程"}, {"en": "parapet/guardrail", "zh": "护栏", "ipa": "ˈpærəpɪt / ˈɡɑːrdeɪl", "category": "桥梁工程"}, {"en": "pier", "zh": "桥墩", "ipa": "piːr", "category": "桥梁工程"}, {"en": "pile foundation", "zh": "桩基础", "ipa": "paɪl faʊnˈdeɪʃən", "category": "桥梁工程"}, {"en": "pile head breaking", "zh": "桩头凿除", "ipa": "paɪl hɛd ˈbreɪkɪŋ", "category": "桥梁工程"}, {"en": "post-tensioning", "zh": "后张法", "ipa": "poʊst ˈtɛnʃənɪŋ", "category": "桥梁工程"}, {"en": "pre-tensioning", "zh": "先张法", "ipa": "priː ˈtɛnʃənɪŋ", "category": "桥梁工程"}, {"en": "precast", "zh": "预制", "ipa": "ˈpriːkɑːst", "category": "桥梁工程"}, {"en": "precast segmental construction", "zh": "预制节段拼装法", "ipa": "ˈpriːkɑːst sɪˈmɛntəl kənˈstrʌkʃən", "category": "桥梁工程"}, {"en": "precast yard", "zh": "预制场", "ipa": "ˈpriːkɑːst jɑːrd", "category": "桥梁工程"}, {"en": "prestressing duct", "zh": "预应力孔道", "ipa": "ˌpriː ˈstrɛsɪŋ dʌkt", "category": "桥梁工程"}, {"en": "pylon and girder simultaneous construction", "zh": "塔梁同步施工", "ipa": "ˈpaɪlən ænd ˈgɜːrdər ˌsɪməlˈteɪniəs kənˈstrʌkʃən", "category": "桥梁工程"}, {"en": "reinforcement cage", "zh": "钢筋笼", "ipa": "ˌriːɪnˈfɔːrsmənt keɪdʒ", "category": "桥梁工程"}, {"en": "reverse circulation drilling", "zh": "反循环成孔", "ipa": "rɪˈvɜːrs sɝːkjʊˈleɪʃən ˈdrɪlɪŋ", "category": "桥梁工程"}, {"en": "rigid frame bridge", "zh": "刚构桥", "ipa": "ˈrɪdʒɪd freɪm brɪdʒ", "category": "桥梁工程"}, {"en": "rotary drilling", "zh": "旋挖成孔", "ipa": "ˈroʊtəri ˈdrɪlɪŋ", "category": "桥梁工程"}, {"en": "side form", "zh": "侧模", "ipa": "saɪd fɔːrm", "category": "桥梁工程"}, {"en": "simply supported girder bridge", "zh": "简支梁桥", "ipa": "ˈsɪmpli səˈpɔːrtɪd ˈɡɜːrdər brɪdʒ", "category": "桥梁工程"}, {"en": "slurry wall protection", "zh": "泥浆护壁", "ipa": "ˈslʌri wɔːl prəˈtɛkʃən", "category": "桥梁工程"}, {"en": "static load test", "zh": "静载试验", "ipa": "ˈstætɪk loʊd tɛst", "category": "桥梁工程"}, {"en": "storage area", "zh": "存梁区", "ipa": "ˈstɔːrɪdʒ ˈɛəriə", "category": "桥梁工程"}, {"en": "substructure", "zh": "下部结构", "ipa": "ˈsʌbˌstrʌktʃər", "category": "桥梁工程"}, {"en": "superstructure", "zh": "上部结构", "ipa": "ˈsuːpərˌstrʌktʃər", "category": "桥梁工程"}, {"en": "suspension bridge", "zh": "悬索桥", "ipa": "səˈspenʃən brɪdʒ", "category": "桥梁工程"}, {"en": "swing method", "zh": "转体施工", "ipa": "swɪŋ ˈmɛθəd", "category": "桥梁工程"}, {"en": "T-beam", "zh": "T梁", "ipa": "tiː biːm", "category": "桥梁工程"}, {"en": "transportation out", "zh": "出运", "ipa": "ˌtrænspərˈteɪʃən aʊt", "category": "桥梁工程"}, {"en": "tremie method", "zh": "导管法浇筑", "ipa": "ˈtrɛmiː ˈmɛθəd", "category": "桥梁工程"}, {"en": "underwater concrete", "zh": "水下混凝土", "ipa": "ˌʌndərˈwɔːtər ˈkɒnkriːt", "category": "桥梁工程"}, {"en": "Affect", "zh": "影响", "ipa": "əˈfekt", "category": "沟通与工作流程"}, {"en": "Agreement", "zh": "协议", "ipa": "əˈɡriːmənt", "category": "沟通与工作流程"}, {"en": "Alteration", "zh": "变更", "ipa": "ˌɔːltəˈreɪʃn", "category": "沟通与工作流程"}, {"en": "Approval officially", "zh": "正式批复", "ipa": "əˈpruːvl əˈfɪʃəli", "category": "沟通与工作流程"}, {"en": "Argument", "zh": "矛盾", "ipa": "ˈɑːɡjumənt", "category": "沟通与工作流程"}, {"en": "Assist", "zh": "协助", "ipa": "əˈsɪst", "category": "沟通与工作流程"}, {"en": "Assistant", "zh": "助手", "ipa": "əˈsɪstənt", "category": "沟通与工作流程"}, {"en": "Attend", "zh": "参加", "ipa": "əˈtend", "category": "沟通与工作流程"}, {"en": "Bad luck", "zh": "坏运气", "ipa": "bæd lʌk", "category": "沟通与工作流程"}, {"en": "Bill of quality", "zh": "工程量清单", "ipa": "bɪl ɒv ˈkwɒləti", "category": "沟通与工作流程"}, {"en": "Calculate", "zh": "计算", "ipa": "ˈkælkjuleɪt", "category": "沟通与工作流程"}, {"en": "Cancel", "zh": "取消", "ipa": "ˈkænsəl", "category": "沟通与工作流程"}, {"en": "Clarify", "zh": "澄清", "ipa": "ˈklærəfaɪ", "category": "沟通与工作流程"}, {"en": "Collect", "zh": "集合", "ipa": "kəˈlekt", "category": "沟通与工作流程"}, {"en": "Complain", "zh": "抱怨", "ipa": "kəmˈpleɪn", "category": "沟通与工作流程"}, {"en": "Condition", "zh": "条件", "ipa": "kənˈdɪʃn", "category": "沟通与工作流程"}, {"en": "Confirm", "zh": "确认", "ipa": "kənˈfɜːm", "category": "沟通与工作流程"}, {"en": "Consultant", "zh": "监理", "ipa": "kənˈsʌltənt", "category": "沟通与工作流程"}, {"en": "Contract", "zh": "合同", "ipa": "ˈkɒntrækt", "category": "沟通与工作流程"}, {"en": "Cooperation", "zh": "合作", "ipa": "kəʊˌɒpəˈreɪʃn", "category": "沟通与工作流程"}, {"en": "Correct", "zh": "正确", "ipa": "kəˈrekt", "category": "沟通与工作流程"}, {"en": "Damage", "zh": "毁坏", "ipa": "ˈdæmɪdʒ", "category": "沟通与工作流程"}, {"en": "Delay", "zh": "延误 / 滞后", "ipa": "dɪˈleɪ", "category": "沟通与工作流程"}, {"en": "Depth", "zh": "深度", "ipa": "depθ", "category": "沟通与工作流程"}, {"en": "Difference", "zh": "差异", "ipa": "ˈdɪfrəns", "category": "沟通与工作流程"}, {"en": "Dimension", "zh": "尺寸", "ipa": "daɪˈmenʃn; dɪˈmenʃn", "category": "沟通与工作流程"}, {"en": "Discuss", "zh": "商量", "ipa": "dɪˈskʌs", "category": "沟通与工作流程"}, {"en": "Disturb", "zh": "受阻", "ipa": "dɪˈstɜːb", "category": "沟通与工作流程"}, {"en": "Document", "zh": "文档", "ipa": "ˈdɒkjument", "category": "沟通与工作流程"}, {"en": "Duty", "zh": "责任", "ipa": "ˈdjuːti", "category": "沟通与工作流程"}, {"en": "Employer", "zh": "业主", "ipa": "ɪmˈplɔɪə(r)", "category": "沟通与工作流程"}, {"en": "Experience", "zh": "经验", "ipa": "ɪkˈspɪəriəns", "category": "沟通与工作流程"}, {"en": "Family", "zh": "家人", "ipa": "ˈfæməli", "category": "沟通与工作流程"}, {"en": "Finish", "zh": "完成", "ipa": "ˈfɪnɪʃ", "category": "沟通与工作流程"}, {"en": "Fire", "zh": "解雇", "ipa": "ˈfaɪə(r)", "category": "沟通与工作流程"}, {"en": "Fuck off", "zh": "滚蛋", "ipa": "fʌk ɒf", "category": "沟通与工作流程"}, {"en": "Get out of", "zh": "出去", "ipa": "ɡet aʊt ɒv", "category": "沟通与工作流程"}, {"en": "Get rid of", "zh": "解除", "ipa": "ɡet rɪd ɒv", "category": "沟通与工作流程"}, {"en": "Go home", "zh": "回家", "ipa": "ɡəʊ həʊm", "category": "沟通与工作流程"}, {"en": "Handle", "zh": "处理", "ipa": "ˈhændl", "category": "沟通与工作流程"}, {"en": "Honest", "zh": "诚实", "ipa": "ˈɒnɪst", "category": "沟通与工作流程"}, {"en": "Hospital", "zh": "医院", "ipa": "ˈhɒspɪtl", "category": "沟通与工作流程"}, {"en": "Immediately", "zh": "立即", "ipa": "ɪˈmiːdiətli", "category": "沟通与工作流程"}, {"en": "Information", "zh": "信息", "ipa": "ˌɪnfəˈmeɪʃn", "category": "沟通与工作流程"}, {"en": "Instruction", "zh": "指令", "ipa": "ɪnˈstrʌkʃn", "category": "沟通与工作流程"}, {"en": "Insurance", "zh": "保险", "ipa": "ɪnˈʃʊərəns", "category": "沟通与工作流程"}, {"en": "Length", "zh": "长度", "ipa": "leŋθ", "category": "沟通与工作流程"}, {"en": "List", "zh": "清单", "ipa": "lɪst", "category": "沟通与工作流程"}, {"en": "Longtime no see", "zh": "好久不见", "ipa": "lɒŋtaɪm nəʊ siː", "category": "沟通与工作流程"}, {"en": "Lunch", "zh": "午饭", "ipa": "lʌntʃ", "category": "沟通与工作流程"}, {"en": "Meeting", "zh": "开会", "ipa": "ˈmiːtɪŋ", "category": "沟通与工作流程"}, {"en": "Message", "zh": "消息", "ipa": "ˈmesɪdʒ", "category": "沟通与工作流程"}, {"en": "Mistake", "zh": "错误", "ipa": "mɪˈsteɪk", "category": "沟通与工作流程"}, {"en": "Must", "zh": "必须", "ipa": "mʌst", "category": "沟通与工作流程"}, {"en": "Need", "zh": "需要", "ipa": "niːd", "category": "沟通与工作流程"}, {"en": "Next one", "zh": "下一个", "ipa": "nekst wʌn", "category": "沟通与工作流程"}, {"en": "Next time", "zh": "下次", "ipa": "nekst taɪm", "category": "沟通与工作流程"}, {"en": "On the way", "zh": "在路上", "ipa": "ɒn ðə weɪ", "category": "沟通与工作流程"}, {"en": "On time", "zh": "按时", "ipa": "ɒn taɪm", "category": "沟通与工作流程"}, {"en": "Ongoing", "zh": "正在进行", "ipa": "ˈɒnɡəʊɪŋ", "category": "沟通与工作流程"}, {"en": "Phone call", "zh": "打电话", "ipa": "fəʊn kɔːl", "category": "沟通与工作流程"}, {"en": "Photo", "zh": "照片", "ipa": "ˈfəʊtəʊ", "category": "沟通与工作流程"}, {"en": "Police", "zh": "警察", "ipa": "pəˈliːs", "category": "沟通与工作流程"}, {"en": "Pray", "zh": "祈祷", "ipa": "preɪ", "category": "沟通与工作流程"}, {"en": "Prison", "zh": "监狱", "ipa": "ˈprɪzn", "category": "沟通与工作流程"}, {"en": "Procedure", "zh": "流程", "ipa": "prəˈsiːdʒə(r)", "category": "沟通与工作流程"}, {"en": "Program", "zh": "计划", "ipa": "ˈprəʊɡræm", "category": "沟通与工作流程"}, {"en": "Project", "zh": "项目", "ipa": "ˈprɒdʒekt", "category": "沟通与工作流程"}, {"en": "Quality first", "zh": "质量第一", "ipa": "ˈkwɒləti fɜːst", "category": "沟通与工作流程"}, {"en": "Radio", "zh": "广播", "ipa": "ˈreɪdiəʊ", "category": "沟通与工作流程"}, {"en": "Recently", "zh": "最近", "ipa": "ˈriːsntli", "category": "沟通与工作流程"}, {"en": "Record", "zh": "记录", "ipa": "ˈrekɔːd", "category": "沟通与工作流程"}, {"en": "Reduce", "zh": "减少", "ipa": "rɪˈdjuːs", "category": "沟通与工作流程"}, {"en": "Replace", "zh": "替代", "ipa": "rɪˈpleɪs", "category": "沟通与工作流程"}, {"en": "Reply", "zh": "回复", "ipa": "rɪˈplaɪ", "category": "沟通与工作流程"}, {"en": "Request For Approval", "zh": "报批单", "ipa": "rɪˈkwest fɔː(r) əˈpruːvl", "category": "沟通与工作流程"}, {"en": "Request For Information", "zh": "报检单", "ipa": "rɪˈkwest fɔː(r) ˌɪnfəˈmeɪʃn", "category": "沟通与工作流程"}, {"en": "Secretary", "zh": "秘书", "ipa": "ˈsekrətri", "category": "沟通与工作流程"}, {"en": "Security", "zh": "保安", "ipa": "sɪˈkjʊərəti", "category": "沟通与工作流程"}, {"en": "Seriously", "zh": "严重", "ipa": "ˈsɪəriəsli", "category": "沟通与工作流程"}, {"en": "Shake hands", "zh": "握手", "ipa": "ʃeɪk hændz", "category": "沟通与工作流程"}, {"en": "Sign", "zh": "签字", "ipa": "saɪn", "category": "沟通与工作流程"}, {"en": "Site meeting", "zh": "工地例会", "ipa": "saɪt ˈmiːtɪŋ", "category": "沟通与工作流程"}, {"en": "Situation", "zh": "情况", "ipa": "ˌsɪtʃuˈeɪʃn", "category": "沟通与工作流程"}, {"en": "Soldier", "zh": "大兵", "ipa": "ˈsəʊldʒə(r)", "category": "沟通与工作流程"}, {"en": "Specification", "zh": "规范", "ipa": "ˌspesɪfɪˈkeɪʃn", "category": "沟通与工作流程"}, {"en": "Steal", "zh": "偷盗", "ipa": "stiːl", "category": "沟通与工作流程"}, {"en": "Stupid", "zh": "愚蠢", "ipa": "ˈstjuːpɪd", "category": "沟通与工作流程"}, {"en": "Stupid mistake", "zh": "低级错误", "ipa": "ˈstjuːpɪd mɪˈsteɪk", "category": "沟通与工作流程"}, {"en": "Subcontractor", "zh": "分包商", "ipa": "ˌsʌbkənˈtræktə(r)", "category": "沟通与工作流程"}, {"en": "Submit", "zh": "提交", "ipa": "səbˈmɪt", "category": "沟通与工作流程"}, {"en": "Suspend", "zh": "停工", "ipa": "səˈspend", "category": "沟通与工作流程"}, {"en": "Take a rest", "zh": "休息", "ipa": "teɪk ə rest", "category": "沟通与工作流程"}, {"en": "Team", "zh": "团队", "ipa": "tiːm", "category": "沟通与工作流程"}, {"en": "Thief", "zh": "小偷", "ipa": "θiːf", "category": "沟通与工作流程"}, {"en": "Tolerate", "zh": "容忍", "ipa": "ˈtɒləreɪt", "category": "沟通与工作流程"}, {"en": "Transfer", "zh": "转移", "ipa": "trænsˈfɜː(r)", "category": "沟通与工作流程"}, {"en": "Trouble", "zh": "麻烦", "ipa": "ˈtrʌbl", "category": "沟通与工作流程"}, {"en": "Typical cross-sections", "zh": "标准横断面", "ipa": "ˈtɪpɪkl ˈkrɒs sekʃnz", "category": "沟通与工作流程"}, {"en": "Understand", "zh": "理解", "ipa": "ˌʌndəˈstænd", "category": "沟通与工作流程"}, {"en": "Volume", "zh": "方量", "ipa": "ˈvɒljuːm", "category": "沟通与工作流程"}, {"en": "Warning letter", "zh": "警告单", "ipa": "ˈwɔːnɪŋ ˈletə(r)", "category": "沟通与工作流程"}, {"en": "Width", "zh": "宽度", "ipa": "wɪdθ", "category": "沟通与工作流程"}, {"en": "Access Slab", "zh": "检修板", "ipa": "ˈækses slæb", "category": "混凝土与模板"}, {"en": "Admixture", "zh": "外加剂", "ipa": "ədˈmɪkstʃə(r)", "category": "混凝土与模板"}, {"en": "Aggregate", "zh": "骨料", "ipa": "ˈæɡrɪɡət", "category": "混凝土与模板"}, {"en": "Air-Entraining Agent", "zh": "引气剂", "ipa": "eə ɪnˈtreɪnɪŋ ˈeɪdʒənt", "category": "混凝土与模板"}, {"en": "Alignment", "zh": "轴线", "ipa": "əˈlaɪnmənt", "category": "混凝土与模板"}, {"en": "Aluminum", "zh": "铝材", "ipa": "ˌæljəˈmɪniəm", "category": "混凝土与模板"}, {"en": "Anchor Bolt", "zh": "地脚螺栓", "ipa": "ˈæŋkə bəʊlt", "category": "混凝土与模板"}, {"en": "Anchorage Length", "zh": "锚固长度", "ipa": "ˈæŋkərɪdʒ leŋθ", "category": "混凝土与模板"}, {"en": "Axis Control Peg", "zh": "轴线控制桩", "ipa": "ˈæksɪs kənˈtrəʊl peɡ", "category": "混凝土与模板"}, {"en": "Base/Foundation", "zh": "基底", "ipa": "beɪs / faʊnˈdeɪʃn", "category": "混凝土与模板"}, {"en": "Bearing Capacity", "zh": "承载力", "ipa": "ˈbeərɪŋ kəˈpæsəti", "category": "混凝土与模板"}, {"en": "Calibration", "zh": "校准", "ipa": "ˌkælɪˈbreɪʃn", "category": "混凝土与模板"}, {"en": "Cement Grout", "zh": "水泥浆", "ipa": "sɪˈment ɡraʊt", "category": "混凝土与模板"}, {"en": "Centering and Leveling", "zh": "对中整平", "ipa": "ˈsentərɪŋ ənd ˈlevlɪŋ", "category": "混凝土与模板"}, {"en": "Centering Rod", "zh": "对中杆", "ipa": "ˈsentərɪŋ rɒd", "category": "混凝土与模板"}, {"en": "Clamp", "zh": "夹具", "ipa": "klæmp", "category": "混凝土与模板"}, {"en": "Compactness", "zh": "密实度", "ipa": "kəmˈpæktnəs", "category": "混凝土与模板"}, {"en": "Completion Survey", "zh": "竣工测量", "ipa": "kəmˈpliːʃn ˈsɜːveɪ", "category": "混凝土与模板"}, {"en": "Compressive Strength", "zh": "抗压强度", "ipa": "kəmˈpresɪv streŋθ", "category": "混凝土与模板"}, {"en": "Concealed Work", "zh": "隐蔽工程", "ipa": "kənˈsiːld wɜːk", "category": "混凝土与模板"}, {"en": "Concrete Mixer Truck", "zh": "混凝土搅拌车", "ipa": "ˈkɒŋkriːt ˈmɪksə trʌk", "category": "混凝土与模板"}, {"en": "Concrete Pump", "zh": "输送泵", "ipa": "ˈkɒŋkriːt pʌmp", "category": "混凝土与模板"}, {"en": "Construction Control Network", "zh": "施工控制网", "ipa": "kənˈstrʌkʃn kənˈtrəʊl ˈnetwɜːk", "category": "混凝土与模板"}, {"en": "Construction Load", "zh": "施工荷载", "ipa": "kənˈstrʌkʃn ləʊd", "category": "混凝土与模板"}, {"en": "Construction Log", "zh": "施工日志", "ipa": "kənˈstrʌkʃn lɒɡ", "category": "混凝土与模板"}, {"en": "Construction Plan", "zh": "施工方案", "ipa": "kənˈstrʌkʃn plæn", "category": "混凝土与模板"}, {"en": "Cover Thickness", "zh": "保护层厚度", "ipa": "ˈkʌvə ˈθɪknəs", "category": "混凝土与模板"}, {"en": "Covering", "zh": "覆盖", "ipa": "ˈkʌvərɪŋ", "category": "混凝土与模板"}, {"en": "Crack", "zh": "裂缝", "ipa": "kræk", "category": "混凝土与模板"}, {"en": "Curing", "zh": "养护", "ipa": "ˈkjʊərɪŋ", "category": "混凝土与模板"}, {"en": "Curing Period", "zh": "养护周期", "ipa": "ˈkjʊərɪŋ ˈpɪəriəd", "category": "混凝土与模板"}, {"en": "Debris", "zh": "杂物", "ipa": "ˈdebriː", "category": "混凝土与模板"}, {"en": "Deformation Monitoring", "zh": "变形监测", "ipa": "ˌdiːfɔːˈmeɪʃn ˈmɒnɪtərɪŋ", "category": "混凝土与模板"}, {"en": "Deviation", "zh": "偏差", "ipa": "ˌdiːviˈeɪʃn", "category": "混凝土与模板"}, {"en": "Dismantling Sequence", "zh": "拆除顺序", "ipa": "dɪsˈmæntlɪŋ ˈsiːkwəns", "category": "混凝土与模板"}, {"en": "Drainage Manhole", "zh": "排水井", "ipa": "ˈdreɪnɪdʒ ˈmænhəʊl", "category": "混凝土与模板"}, {"en": "Early Strength Agent", "zh": "早强剂", "ipa": "ˈɜːli streŋθ ˈeɪdʒənt", "category": "混凝土与模板"}, {"en": "Elevation", "zh": "标高", "ipa": "ˌelɪˈveɪʃn", "category": "混凝土与模板"}, {"en": "Embedded Part", "zh": "预埋件", "ipa": "ɪmˈbedɪd pɑːt", "category": "混凝土与模板"}, {"en": "Final Setting Time", "zh": "终凝时间", "ipa": "ˈfaɪnl ˈsetɪŋ taɪm", "category": "混凝土与模板"}, {"en": "Freeze-Resistance", "zh": "抗冻性", "ipa": "friːz rɪˈzɪstəns", "category": "混凝土与模板"}, {"en": "Honeycomb and Pockmark", "zh": "蜂窝麻面", "ipa": "ˈhʌnikəʊm ənd ˈpɒkmɑːk", "category": "混凝土与模板"}, {"en": "Horizontal Control", "zh": "平面控制", "ipa": "ˌhɒrɪˈzɒntl kənˈtrəʊl", "category": "混凝土与模板"}, {"en": "Hydration Heat", "zh": "水化热", "ipa": "haɪˈdreɪʃn hiːt", "category": "混凝土与模板"}, {"en": "Impermeability", "zh": "抗渗性", "ipa": "ɪmˌpɜːmiəˈbɪləti", "category": "混凝土与模板"}, {"en": "Initial Setting Time", "zh": "初凝时间", "ipa": "ɪˈnɪʃl ˈsetɪŋ taɪm", "category": "混凝土与模板"}, {"en": "Inspection/Acceptance", "zh": "验收", "ipa": "ɪnˈspekʃn / əkˈseptəns", "category": "混凝土与模板"}, {"en": "Lap Length", "zh": "搭接长度", "ipa": "læp leŋθ", "category": "混凝土与模板"}, {"en": "Laser Level", "zh": "激光投线仪", "ipa": "ˈleɪzə ˈlevl", "category": "混凝土与模板"}, {"en": "Lateral Pressure", "zh": "侧向压力", "ipa": "ˈlætərəl ˈpreʃə(r)", "category": "混凝土与模板"}, {"en": "MEP Sleeve", "zh": "机电套管", "ipa": "ˌem iː ˈpiː sliːv", "category": "混凝土与模板"}, {"en": "Mix Ratio", "zh": "配合比", "ipa": "mɪks ˈreɪʃiəʊ", "category": "混凝土与模板"}, {"en": "Obstacle", "zh": "障碍物", "ipa": "ˈɒbstəkl", "category": "混凝土与模板"}, {"en": "Panel", "zh": "面板", "ipa": "ˈpænl", "category": "混凝土与模板"}, {"en": "Plastic", "zh": "塑料", "ipa": "ˈplæstɪk", "category": "混凝土与模板"}, {"en": "Plumbness", "zh": "垂直度", "ipa": "ˈplʌmnəs", "category": "混凝土与模板"}, {"en": "Pouring Sequence", "zh": "浇筑顺序", "ipa": "ˈpɔːrɪŋ ˈsiːkwəns", "category": "混凝土与模板"}, {"en": "Precast Component", "zh": "预制构件", "ipa": "ˌpriːˈkɑːst kəmˈpəʊnənt", "category": "混凝土与模板"}, {"en": "Rebar Bender", "zh": "钢筋弯曲机", "ipa": "ˈriːbɑː(r) ˈbendə(r)", "category": "混凝土与模板"}, {"en": "Rebar Cutter", "zh": "钢筋切断机", "ipa": "ˈriːbɑː(r) ˈkʌtə(r)", "category": "混凝土与模板"}, {"en": "Rebar/Steel Bar", "zh": "钢筋", "ipa": "ˈriːbɑː(r) / stiːl bɑː(r)", "category": "混凝土与模板"}, {"en": "Reinforcement Ratio", "zh": "配筋率", "ipa": "ˌriːɪnˈfɔːsmənt ˈreɪʃiəʊ", "category": "混凝土与模板"}, {"en": "Release Agent", "zh": "脱模剂", "ipa": "rɪˈliːs ˈeɪdʒənt", "category": "混凝土与模板"}, {"en": "Retarder", "zh": "缓凝剂", "ipa": "rɪˈtɑːdə(r)", "category": "混凝土与模板"}, {"en": "Sampling", "zh": "取样", "ipa": "ˈsɑːmplɪŋ", "category": "混凝土与模板"}, {"en": "Sand", "zh": "砂", "ipa": "sænd", "category": "混凝土与模板"}, {"en": "Screw", "zh": "螺丝", "ipa": "skruː", "category": "混凝土与模板"}, {"en": "Settlement", "zh": "沉降", "ipa": "ˈsetlmənt", "category": "混凝土与模板"}, {"en": "Settlement Observation", "zh": "沉降观测", "ipa": "ˈsetlmənt ˌɒbzəˈveɪʃn", "category": "混凝土与模板"}, {"en": "Shrinkage", "zh": "收缩", "ipa": "ˈʃrɪŋkɪdʒ", "category": "混凝土与模板"}, {"en": "Slump Test", "zh": "坍落度试验", "ipa": "slʌmp test", "category": "混凝土与模板"}, {"en": "Spray Paint", "zh": "喷漆", "ipa": "spreɪ peɪnt", "category": "混凝土与模板"}, {"en": "Spraying", "zh": "喷淋", "ipa": "ˈspreɪɪŋ", "category": "混凝土与模板"}, {"en": "Steel", "zh": "钢材", "ipa": "stiːl", "category": "混凝土与模板"}, {"en": "Steel Tape Measure", "zh": "钢卷尺", "ipa": "stiːl teɪp ˈmeʒə(r)", "category": "混凝土与模板"}, {"en": "String Line", "zh": "墨线", "ipa": "strɪŋ laɪn", "category": "混凝土与模板"}, {"en": "Structural Drawing", "zh": "结构图纸", "ipa": "ˈstrʌktʃərəl ˈdrɔːɪŋ", "category": "混凝土与模板"}, {"en": "Technical Disclosure", "zh": "技术交底", "ipa": "ˈteknɪkl dɪsˈkləʊʒə(r)", "category": "混凝土与模板"}, {"en": "Temporary Benchmark", "zh": "临时水准点", "ipa": "ˈtemprəri ˈbentʃmɑːk", "category": "混凝土与模板"}, {"en": "Testing", "zh": "检测", "ipa": "ˈtestɪŋ", "category": "混凝土与模板"}, {"en": "Timber", "zh": "木材", "ipa": "ˈtɪmbə(r)", "category": "混凝土与模板"}, {"en": "Total Station", "zh": "全站仪", "ipa": "ˈtəʊtl ˈsteɪʃn", "category": "混凝土与模板"}, {"en": "Tripod", "zh": "三脚架", "ipa": "ˈtraɪpɒd", "category": "混凝土与模板"}, {"en": "U-Drain", "zh": "U 型槽", "ipa": "juː dreɪn", "category": "混凝土与模板"}, {"en": "Vertical Control", "zh": "高程控制", "ipa": "ˈvɜːtɪkl kənˈtrəʊl", "category": "混凝土与模板"}, {"en": "Vibrating Rod", "zh": "振捣棒", "ipa": "vaɪˈbreɪtɪŋ rɒd", "category": "混凝土与模板"}, {"en": "Vibration", "zh": "振捣", "ipa": "vaɪˈbreɪʃn", "category": "混凝土与模板"}, {"en": "Water Reducer", "zh": "减水剂", "ipa": "ˈwɔːtə rɪˈdjuːsə(r)", "category": "混凝土与模板"}, {"en": "Asphalt Concrete", "zh": "沥青混凝土", "ipa": "ˈæsfælt ˈkɒŋkriːt", "category": "项目进度"}, {"en": "Base Layer", "zh": "基层", "ipa": "beɪs ˈleɪə(r)", "category": "项目进度"}, {"en": "Clearing and Grubbing", "zh": "清理与挖掘", "ipa": "ˈklɪərɪŋ ənd ˈɡrʌbɪŋ", "category": "项目进度"}, {"en": "Commencement Date", "zh": "开工日期", "ipa": "kəˈmensmənt deɪt", "category": "项目进度"}, {"en": "Completion Date", "zh": "竣工日期", "ipa": "kəmˈpliːʃn deɪt", "category": "项目进度"}, {"en": "Construction Schedule", "zh": "施工进度计划", "ipa": "kənˈstrʌkʃn ˈʃedjuːl", "category": "项目进度"}, {"en": "Construction Works", "zh": "施工工程", "ipa": "kənˈstrʌkʃn wɜːrks", "category": "项目进度"}, {"en": "Contract Duration", "zh": "合同工期", "ipa": "ˈkɒntrækt djuˈreɪʃn", "category": "项目进度"}, {"en": "Cross Culvert", "zh": "横向涵洞", "ipa": "krɒs ˈkʌlvət", "category": "项目进度"}, {"en": "Culvert Installation", "zh": "涵洞安装", "ipa": "ˈkʌlvət ˌɪnstəˈleɪʃn", "category": "项目进度"}, {"en": "Cumulative Progress", "zh": "累计进度", "ipa": "ˈkjuːmjələtɪv ˈprəʊɡres", "category": "项目进度"}, {"en": "Drainage Works", "zh": "排水工程", "ipa": "ˈdreɪnɪdʒ wɜːks", "category": "项目进度"}, {"en": "Elapsed Period", "zh": "已用工期", "ipa": "ɪˈlæpst ˈpɪəriəd", "category": "项目进度"}, {"en": "Filling and Compaction", "zh": "回填与压实", "ipa": "ˈfɪlɪŋ ənd kəmˈpækʃn", "category": "项目进度"}, {"en": "Financial Progress", "zh": "财务进度", "ipa": "faɪˈnænʃl ˈprəʊɡres", "category": "项目进度"}, {"en": "Longitudinal Drainage", "zh": "纵向排水", "ipa": "ˌlɒŋɡɪˈtjuːdɪnl ˈdreɪnɪdʒ", "category": "项目进度"}, {"en": "Manhole Construction", "zh": "检查井施工", "ipa": "ˈmænhəʊl kənˈstrʌkʃn", "category": "项目进度"}, {"en": "Monthly Progress", "zh": "月度进度", "ipa": "ˈmʌnθli ˈprəʊɡres", "category": "项目进度"}, {"en": "Outflow Channel", "zh": "排水通道", "ipa": "ˈaʊtfləʊ tʃænl", "category": "项目进度"}, {"en": "Pavement Works", "zh": "路面工程", "ipa": "ˈpeɪvmənt wɜːks", "category": "项目进度"}, {"en": "Physical Progress", "zh": "实体进度", "ipa": "ˈfɪzɪkl ˈprəʊɡres", "category": "项目进度"}, {"en": "Planned Progress", "zh": "计划进度", "ipa": "plænd ˈprəʊɡres", "category": "项目进度"}, {"en": "Prime Coat", "zh": "透层油", "ipa": "praɪm kəʊt", "category": "项目进度"}, {"en": "Progress Report", "zh": "进度报告", "ipa": "ˈprəʊɡres rɪˈpɔːt", "category": "项目进度"}, {"en": "Project Progress", "zh": "项目进度", "ipa": "ˈprɒdʒekt ˈprəʊɡres", "category": "项目进度"}, {"en": "Relocation of Utilities", "zh": "管线迁移", "ipa": "ˌriːləʊˈkeɪʃn ɒv juːˈtɪlətiz", "category": "项目进度"}, {"en": "Remaining Period", "zh": "剩余工期", "ipa": "rɪˈmeɪnɪŋ ˈpɪəriəd", "category": "项目进度"}, {"en": "Roadbed Preparation", "zh": "路基准备", "ipa": "ˈrəʊdbed ˌprepəˈreɪʃn", "category": "项目进度"}, {"en": "Service Duct", "zh": "服务管道", "ipa": "ˈsɜːvɪs dʌkt", "category": "项目进度"}, {"en": "Subbase Layer", "zh": "底基层", "ipa": "ˈsʌbbeɪs ˈleɪə(r)", "category": "项目进度"}, {"en": "Time Progress", "zh": "时间进度", "ipa": "taɪm ˈprəʊɡres", "category": "项目进度"}, {"en": "Topsoil Removal", "zh": "表土清除", "ipa": "ˈtɒpsɔɪl rɪˈmuːvl", "category": "项目进度"}, {"en": "Work Section", "zh": "施工路段", "ipa": "wɜːk ˈsekʃn", "category": "项目进度"}, {"en": "Work Zone", "zh": "作业区", "ipa": "wɜːk zəʊn", "category": "项目进度"}];
+const categorySelect = document.getElementById('categorySelect');
+const searchInput = document.getElementById('searchInput');
+const wordText = document.getElementById('wordText');
+const ipaText = document.getElementById('ipaText');
+const meaningText = document.getElementById('meaningText');
+const categoryText = document.getElementById('categoryText');
+const totalCount = document.getElementById('totalCount');
+const currentIndexEl = document.getElementById('currentIndex');
+const knownCountEl = document.getElementById('knownCount');
+const modeLabel = document.getElementById('modeLabel');
+const quizBox = document.getElementById('quizBox');
+const quizOptions = document.getElementById('quizOptions');
+const showBtn = document.getElementById('showBtn');
+const speakBtn = document.getElementById('speakBtn');
+
+let mode = 'flash';
+let filtered = [...allWords];
+let current = 0;
+let showAnswer = false;
+let known = JSON.parse(localStorage.getItem('eng_known_words') || '[]');
+
+function uniq(arr) { return [...new Set(arr)]; }
+function saveKnown() { localStorage.setItem('eng_known_words', JSON.stringify(known)); knownCountEl.textContent = known.length; }
+function populateCategories() {
+  uniq(allWords.map(x => x.category).filter(Boolean)).sort().forEach(c => {
+    const o = document.createElement('option'); o.value = c; o.textContent = c; categorySelect.appendChild(o);
+  });
+}
+function applyFilter() {
+  const q = searchInput.value.trim().toLowerCase();
+  const c = categorySelect.value;
+  filtered = allWords.filter(x => {
+    const text = `${x.en} ${x.zh} ${x.ipa} ${x.category}`.toLowerCase();
+    return (!q || text.includes(q)) && (!c || x.category === c);
+  });
+  if (!filtered.length) {
+    filtered = [];
+    current = 0;
+    renderEmpty();
+    return;
+  }
+  if (current >= filtered.length) current = 0;
+  render();
+}
+function renderEmpty() {
+  totalCount.textContent = 0;
+  currentIndexEl.textContent = 0;
+  wordText.textContent = '没有匹配结果';
+  ipaText.textContent = '';
+  meaningText.textContent = '';
+  categoryText.textContent = '';
+  quizBox.classList.add('hidden');
+}
+function currentWord() { return filtered[current]; }
+function render() {
+  const item = currentWord();
+  if (!item) return renderEmpty();
+  totalCount.textContent = filtered.length;
+  currentIndexEl.textContent = current + 1;
+  knownCountEl.textContent = known.length;
+  categoryText.textContent = item.category || '';
+  ipaText.textContent = item.ipa ? '/' + item.ipa + '/' : '';
+
+  document.getElementById('mainActions').classList.remove('hidden');
+  document.getElementById('markActions').classList.remove('hidden');
+
+  if (mode === 'flash') {
+    modeLabel.textContent = '翻卡模式';
+    wordText.textContent = item.en;
+    meaningText.textContent = item.zh;
+    quizBox.classList.add('hidden');
+    meaningText.classList.toggle('hidden', !showAnswer);
+    showBtn.textContent = showAnswer ? '隐藏答案' : '显示答案';
+  } else if (mode === 'listen') {
+    modeLabel.textContent = '听音模式';
+    wordText.textContent = showAnswer ? item.en : '点击“读音”先听，再猜词义';
+    meaningText.textContent = item.zh;
+    meaningText.classList.toggle('hidden', !showAnswer);
+    quizBox.classList.add('hidden');
+    showBtn.textContent = showAnswer ? '隐藏答案' : '显示答案';
+  } else if (mode === 'quiz') {
+    modeLabel.textContent = '选择题';
+    wordText.textContent = item.en;
+    meaningText.classList.add('hidden');
+    showBtn.textContent = '重出题目';
+    quizBox.classList.remove('hidden');
+    buildQuiz();
+  }
+}
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  const voices = speechSynthesis.getVoices();
+  const voice = voices.find(v => /^en/i.test(v.lang)) || voices[0];
+  if (voice) u.voice = voice;
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+function nextWord(random=false) {
+  if (!filtered.length) return;
+  showAnswer = false;
+  current = random ? Math.floor(Math.random() * filtered.length) : (current + 1) % filtered.length;
+  render();
+}
+function prevWord() {
+  if (!filtered.length) return;
+  showAnswer = false;
+  current = (current - 1 + filtered.length) % filtered.length;
+  render();
+}
+function markKnown() {
+  const item = currentWord();
+  if (!item) return;
+  const key = item.en + '|' + item.zh;
+  if (!known.includes(key)) known.push(key);
+  saveKnown();
+  nextWord();
+}
+function markAgain() {
+  nextWord();
+}
+function buildQuiz() {
+  const item = currentWord();
+  const pool = allWords.filter(x => x.zh !== item.zh);
+  const shuffled = pool.sort(() => Math.random() - 0.5).slice(0, 3).map(x => x.zh);
+  const options = [...shuffled, item.zh].sort(() => Math.random() - 0.5);
+  quizOptions.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.onclick = () => {
+      if (opt === item.zh) {
+        btn.classList.add('correct');
+        setTimeout(() => { markKnown(); }, 500);
+      } else {
+        btn.classList.add('wrong');
+        [...quizOptions.children].forEach(c => {
+          if (c.textContent === item.zh) c.classList.add('correct');
+        });
+      }
+    };
+    quizOptions.appendChild(btn);
+  });
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    showAnswer = false;
+    render();
+  });
+});
+searchInput.addEventListener('input', applyFilter);
+categorySelect.addEventListener('change', applyFilter);
+document.getElementById('showBtn').addEventListener('click', () => {
+  if (mode === 'quiz') {
+    buildQuiz();
+    return;
+  }
+  showAnswer = !showAnswer;
+  render();
+});
+document.getElementById('speakBtn').addEventListener('click', () => {
+  const item = currentWord(); if (item) speak(item.en);
+});
+document.getElementById('nextBtn').addEventListener('click', () => nextWord());
+document.getElementById('prevBtn').addEventListener('click', prevWord);
+document.getElementById('shuffleBtn').addEventListener('click', () => nextWord(true));
+document.getElementById('knowBtn').addEventListener('click', markKnown);
+document.getElementById('againBtn').addEventListener('click', markAgain);
+
+populateCategories();
+saveKnown();
+applyFilter();
+</script>
+</body>
+</html>
